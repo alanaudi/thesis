@@ -6,6 +6,7 @@ authors = ["alanaudi <alanaudi.tw@gmail.com>"]
 
 [tool.poetry.dependencies]
 python = "^3.7"
+textrank4zh = "^0.3"
 
 [tool.poetry.dev-dependencies]
 
