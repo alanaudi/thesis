@@ -8,6 +8,7 @@ authors = ["alanaudi <alanaudi.tw@gmail.com>"]
 python = "^3.7"
 click = "^7.0"
 pandas = "^1.0.1"
+tabulate = "^0.8.6"
 
 [tool.poetry.dev-dependencies]
 

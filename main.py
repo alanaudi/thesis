@@ -3,6 +3,7 @@
 
 # Third-party import
 import click
+from tabulate import tabulate
 import pandas as pd
 
 # Local import
@@ -32,8 +33,7 @@ def main(**kwargs):
 @click.option('-bd', '--base-directory', default='/home/username/', help='Base directory')
 def exp1(**kwargs):
     # Print argument, option, parameter
-    df = pd.DataFrame(kwargs.items(), columns=['Name', 'Value'])
-    print(df.to_string(index=False))
+    print(tabulate(list(kwargs.items()), headers=['Name', 'Value'], tablefmt='orgtbl'))
 
     # do
 
