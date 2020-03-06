@@ -1,8 +1,13 @@
 """ Personal Utilities """
-
-import xlrd
+# Standard import {{{
 import csv
 
+# Third-party import
+import xlrd
+
+# Local import
+
+# }}}
 
 
 class EasyDict(dict):

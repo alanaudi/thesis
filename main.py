@@ -14,20 +14,21 @@ from torch.optim.lr_scheduler import StepLR
 
 # Local import
 from lib.utils import EasyDict
+from lib.nn.modules import Net
 # }}}
 
 # Golbal Settings {{{
 _global_test_options = [
-    # click.option('-test', '--test-arg', 'var_name', default='default value', help='Please customize option value'),
-    click.option('-b', '--batch-size', 'batch_size', default=64, help='Input batch size for training (default: 64)'),
-    click.option('-bte', '--test-batch-size', 'test_batch_size', default=1000, help='Input batch size for testing (default: 1000)'),
-    click.option('-e', '--epochs', 'epochs', default=14, help='Number of epochs to train (deafult: 14)'),
-    click.option('-lr', '--learning-rate', 'learning_rate', default=1.0, help='Learning rate (default: 1.0)'),
-    click.option('-ga', '--gamma', 'gamma', default=0.7, help='Learning rate step gamma (default: 0.7)'),
-    click.option('-s', '--seed', 'seed', default=1, help='Random seed (default: 1)'),
-    click.option('-li', '--log-interval', 'log_interval', default=10, help='How many batches to wait before logging training status (deafult: 10)'),
-    click.option('-m', '--save-model', 'save_model', default=False, help='Save current model (default: False)'),
-]
+        # click.option('-test', '--test-arg', 'var_name', default='default value', help='Please customize option value'),
+        click.option('-b', '--batch-size', 'batch_size', default=64, help='Input batch size for training (default: 64)'),
+        click.option('-bte', '--test-batch-size', 'test_batch_size', default=1000, help='Input batch size for testing (default: 1000)'),
+        click.option('-e', '--epochs', 'epochs', default=14, help='Number of epochs to train (deafult: 14)'),
+        click.option('-lr', '--learning-rate', 'learning_rate', default=1.0, help='Learning rate (default: 1.0)'),
+        click.option('-ga', '--gamma', 'gamma', default=0.7, help='Learning rate step gamma (default: 0.7)'),
+        click.option('-s', '--seed', 'seed', default=1, help='Random seed (default: 1)'),
+        click.option('-li', '--log-interval', 'log_interval', default=10, help='How many batches to wait before logging training status (deafult: 10)'),
+        click.option('-m', '--save-model', 'save_model', default=False, help='Save current model (default: False)'),
+        ]
 
 def global_test_options(func):
     for option in reversed(_global_test_options):
@@ -54,6 +55,7 @@ def exp1(**kwargs):
 @main.command()
 @global_test_options
 @click.option('-o', '--out-dir', 'out_dir', default='./log/mnist', help='Output directory')
+@click.option('-d', '--data-dir', 'data_dir', default='./data', help='Data directory')
 def mnist(**kwargs):
     # Print argument, option, parameter
     print(tabulate(list(kwargs.items()), headers=['Name', 'Value'], tablefmt='orgtbl'))
@@ -63,35 +65,35 @@ def mnist(**kwargs):
     print(args.out_dir)
     torch.manual_seed(args.seed)
 
-        device = torch.device("cuda" if use_cuda else "cpu")
+    use_cuda = True
+    device = torch.device("cuda" if use_cuda else "cpu")
 
-        loader_args = {'num_workers': 1, 'pin_memory': True} if use_cuda else {}
-        train_loader = torch.utils.data.DataLoader(
-            datasets.MNIST('../data', train=True, download=True,
-                           transform=transforms.Compose([
-                               transforms.ToTensor(),
-                               transforms.Normalize((0.1307,), (0.3081,))
-                           ])),
-            batch_size=args.batch_size, shuffle=True, **loader_args)
-        test_loader = torch.utils.data.DataLoader(
-            datasets.MNIST('../data', train=False, transform=transforms.Compose([
-                               transforms.ToTensor(),
-                               transforms.Normalize((0.1307,), (0.3081,))
-                           ])),
-            batch_size=args.test_batch_size, shuffle=True, **loader_args)
+    kwargs = {'num_workers': 1, 'pin_memory': True} if use_cuda else {}
+    train_loader = torch.utils.data.DataLoader(
+        datasets.MNIST(args.data_dir, train=True, download=True,
+                       transform=transforms.Compose([
+                           transforms.ToTensor(),
+                           transforms.Normalize((0.1307,), (0.3081,))
+                       ])),
+        batch_size=args.batch_size, shuffle=True, **kwargs)
+    test_loader = torch.utils.data.DataLoader(
+        datasets.MNIST(args.data_dir, train=False, transform=transforms.Compose([
+                           transforms.ToTensor(),
+                           transforms.Normalize((0.1307,), (0.3081,))
+                       ])),
+        batch_size=args.test_batch_size, shuffle=True, **kwargs)
 
-        model = Net().to(device)
-        optimizer = optim.Adadelta(model.parameters(), lr=args.lr)
+    model = Net().to(device)
+    optimizer = optim.Adadelta(model.parameters(), lr=args.learning_rate)
 
-        scheduler = StepLR(optimizer, step_size=1, gamma=args.gamma)
-        for epoch in range(1, args.epochs + 1):
-            train(args, model, device, train_loader, optimizer, epoch)
-            test(args, model, device, test_loader)
-            scheduler.step()
+    scheduler = StepLR(optimizer, step_size=1, gamma=args.gamma)
+    for epoch in range(1, args.epochs + 1):
+        train(args, model, device, train_loader, optimizer, epoch)
+        test(args, model, device, test_loader)
+        scheduler.step()
 
-        if args.save_model:
-            torch.save(model.state_dict(), "mnist_cnn.pt")
-
+    if args.save_model:
+        torch.save(model.state_dict(), F"{args.output_dir}/mnist_cnn.pt")
 
 def train(args, model, device, train_loader, optimizer, epoch):
     model.train()
@@ -125,6 +127,7 @@ def test(args, model, device, test_loader):
     print('\nTest set: Average loss: {:.4f}, Accuracy: {}/{} ({:.0f}%)\n'.format(
         test_loss, correct, len(test_loader.dataset),
         100. * correct / len(test_loader.dataset)))
+
 
 if "__main__" == __name__:
     main()
