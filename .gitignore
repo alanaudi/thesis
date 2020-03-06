@@ -10,3 +10,9 @@ __pycache__/
 
 # Git
 github/
+
+# Data
+data/
+
+# Log
+log/
